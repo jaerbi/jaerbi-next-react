@@ -1,6 +1,6 @@
 'use client'; // 1. Це обов'язково в Next.js для інтерактивних компонентів
 
-import { useState } from 'react'; // 2. Імпортуємо функцію для стану
+import { useEffect, useState } from 'react'; // 2. Імпортуємо функцію для стану
 import UserCard from './components/userCard';
 
 interface Game {
@@ -11,19 +11,57 @@ interface Game {
 }
 
 const INITIAL_GAMES: Game[] = [
-    { id: 1, title: 'Civilization VII', genre: 'Strategy', isFavorite: true },
-    { id: 2, title: 'Minecraft', genre: 'Sandbox', isFavorite: false },
-    { id: 3, title: 'Chess', genre: 'Board Game', isFavorite: false },
-    { id: 4, title: 'Subnautica 2', genre: 'Adventures', isFavorite: false },
-]
+  { id: 1, title: 'Civilization VII', genre: 'Strategy', isFavorite: true },
+  { id: 2, title: 'Minecraft', genre: 'Sandbox', isFavorite: false },
+  { id: 3, title: 'Chess', genre: 'Board Game', isFavorite: false },
+  { id: 4, title: 'Subnautica 2', genre: 'Adventures', isFavorite: false },
+];
 
 export default function Home() {
   //    name — це сама змінна (аналог public name = 'Steve').
   // setName — це єдиний спосіб її змінити. Ти не можеш написати name = 'Alex'. React просто не помітить цього і не оновить екран. Треба обов'язково викликати setName('Alex').
   const [name, setName] = useState('Steve');
   const [likes, setLikes] = useState(0);
-  const [games, setGames] = useState<Game[]>(INITIAL_GAMES);
+  const [games, setGames] = useState<Game[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [newGameTitle, setNewGameTitle] = useState('');
 
+  useEffect(() => {
+    console.log(`Компонент з'явився (як ngOnInit)`);
+
+    const timer = setTimeout(() => {
+      setGames(INITIAL_GAMES);
+      setIsLoading(false);
+    }, 2000);
+    // Це аналог ngOnDestroy
+    return () => clearTimeout(timer);
+  }, []); // [] каже React: "Тільки один раз при старті"
+
+  useEffect(() => {
+    console.log(`Ім'я змінилося! (як ngOnChanges)`);
+  }, [name]);
+  useEffect(() => {
+    // const timer = setInterval(() => console.log('Tick'), 1000);
+
+    return () => {
+      //   clearInterval(timer);
+      console.log('Компонент видалено (як ngOnDestroy)');
+    };
+  }, []);
+
+  const addNewGame = () => {
+    if (!newGameTitle.trim()) return; // Перевірка на порожній рядок
+
+    const newGame: Game = {
+      id: Date.now(),
+      title: newGameTitle,
+      genre: 'Unknown',
+      isFavorite: false,
+    };
+
+    setGames([...games, newGame]);
+    setNewGameTitle(''); // Очищуємо інпут після додавання
+  };
   const handleNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setName(event.target.value);
   };
@@ -34,6 +72,15 @@ export default function Home() {
     setName('Steve');
     setLikes(0);
     setGames(INITIAL_GAMES);
+  };
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (newGameTitle.length < 3) {
+      return;
+    }
+
+    if (event.key === 'Enter') {
+      addNewGame();
+    }
   };
 
   return (
@@ -58,7 +105,36 @@ export default function Home() {
       <div className="flex gap-[24px]">
         {/* Передаємо дані через атрибути (Props) */}
         <UserCard name={name} level={likes} avatarColor="bg-green-500" onLike={() => setLikes(likes + 1)} />
-        <UserCard name={'Alex'} level={5+likes} isVip={true} avatarColor="bg-green-500" onLike={() => setLikes(likes + 1)} />
+        <UserCard
+          name={'Alex'}
+          level={5 + likes}
+          isVip={true}
+          avatarColor="bg-green-500"
+          onLike={() => setLikes(likes + 1)}
+        />
+      </div>
+
+      <div className="flex flex-col gap-4 p-6 bg-gray-800 rounded-xl border border-gray-700 w-full max-w-md">
+        <h2 className="text-xl font-bold">Додати нову гру</h2>
+
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Назва гри..."
+            value={newGameTitle} // "Прив'язка" до стану
+            onKeyDown={handleKeyDown}
+            onChange={(e) => setNewGameTitle(e.target.value)} // Оновлення стану при кожному символі
+            className="flex-1 bg-gray-900 border border-gray-600 p-2 rounded-lg outline-none focus:border-blue-500"
+          />
+
+          <button
+            onClick={addNewGame}
+            disabled={newGameTitle.length < 3}
+            className={`${newGameTitle.length < 3 ? 'bg-gray-300 opacity-50' : 'bg-green-600 hover:bg-green-500 cursor-pointer'}  px-4 py-2 rounded-lg font-bold transition`}
+          >
+            Додати
+          </button>
+        </div>
       </div>
 
       {!!games.length && (
