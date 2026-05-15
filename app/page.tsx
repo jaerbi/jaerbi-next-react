@@ -2,20 +2,10 @@
 
 import { useEffect, useState } from 'react'; // 2. Імпортуємо функцію для стану
 import UserCard from './components/userCard';
+import Link from 'next/link';
+import { Game, INITIAL_GAMES } from './data/data';
 
-interface Game {
-  id: number;
-  title: string;
-  genre: string;
-  isFavorite: boolean;
-}
 
-const INITIAL_GAMES: Game[] = [
-  { id: 1, title: 'Civilization VII', genre: 'Strategy', isFavorite: true },
-  { id: 2, title: 'Minecraft', genre: 'Sandbox', isFavorite: false },
-  { id: 3, title: 'Chess', genre: 'Board Game', isFavorite: false },
-  { id: 4, title: 'Subnautica 2', genre: 'Adventures', isFavorite: false },
-];
 
 export default function Home() {
   //    name — це сама змінна (аналог public name = 'Steve').
@@ -57,6 +47,7 @@ export default function Home() {
       title: newGameTitle,
       genre: 'Unknown',
       isFavorite: false,
+      image: ''
     };
 
     setGames([...games, newGame]);
@@ -84,13 +75,15 @@ export default function Home() {
   };
 
   return (
-    <main className="p-10 flex flex-col items-center gap-6 bg-gray-900 min-h-screen text-white">
-      <button
-        onClick={handleReset}
-        className="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-lg transition cursor-pointer"
-      >
-        Reset
-      </button>
+    <main className="p-10 flex flex-col items-center gap-6">
+      <div className="flex gap-[24px]">
+        <button
+          onClick={handleReset}
+          className="bg-blue-600 hover:bg-blue-500 px-6 py-2 rounded-lg transition cursor-pointer"
+        >
+          Reset
+        </button>
+      </div>
       <div className="flex flex-col gap-2 w-80">
         <label className="text-sm text-gray-400 text-left">Змінити ім'я:</label>
         <input
@@ -153,7 +146,7 @@ export default function Home() {
                 }`}
               >
                 <div className="flex justify-between items-center">
-                  <span>{game.title}</span>
+                  <Link href={`/game/${game.id}`} className="text-blue-400 hover:underline">{game.title}</Link>
 
                   {/* 5. Аналог *ngIf — логічне && */}
                   {game.isFavorite && (
