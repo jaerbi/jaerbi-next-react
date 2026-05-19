@@ -4,8 +4,7 @@ import { useEffect, useState } from 'react'; // 2. Імпортуємо функ
 import UserCard from './components/userCard';
 import Link from 'next/link';
 import { Game, INITIAL_GAMES } from './data/data';
-
-
+import { getGames } from './actions';
 
 export default function Home() {
   //    name — це сама змінна (аналог public name = 'Steve').
@@ -18,27 +17,15 @@ export default function Home() {
 
   useEffect(() => {
     console.log(`Компонент з'явився (як ngOnInit)`);
-
-    const timer = setTimeout(() => {
-      setGames(INITIAL_GAMES);
-      setIsLoading(false);
-    }, 2000);
-    // Це аналог ngOnDestroy
-    return () => clearTimeout(timer);
-  }, []); // [] каже React: "Тільки один раз при старті"
-
-  useEffect(() => {
-    console.log(`Ім'я змінилося! (як ngOnChanges)`);
-  }, [name]);
-  useEffect(() => {
-    // const timer = setInterval(() => console.log('Tick'), 1000);
-
-    return () => {
-      //   clearInterval(timer);
-      console.log('Компонент видалено (як ngOnDestroy)');
+    // Створюємо асинхронну функцію всередині useEffect
+    const fetchGames = async () => {
+      const freshGames = await getGames(); // Запитуємо свіжі дані з сервера
+      setGames([...freshGames]);
     };
-  }, []);
 
+    fetchGames();
+    return () => {};
+  }, []);
   const addNewGame = () => {
     if (!newGameTitle.trim()) return; // Перевірка на порожній рядок
 
@@ -47,7 +34,7 @@ export default function Home() {
       title: newGameTitle,
       genre: 'Unknown',
       isFavorite: false,
-      image: ''
+      image: '',
     };
 
     setGames([...games, newGame]);
@@ -62,7 +49,7 @@ export default function Home() {
   const handleReset = () => {
     setName('Steve');
     setLikes(0);
-    setGames(INITIAL_GAMES);
+    setGames([...INITIAL_GAMES]);
   };
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (newGameTitle.length < 3) {
@@ -146,7 +133,9 @@ export default function Home() {
                 }`}
               >
                 <div className="flex justify-between items-center">
-                  <Link href={`/game/${game.id}`} className="text-blue-400 hover:underline">{game.title}</Link>
+                  <Link href={`/game/${game.id}`} className="text-blue-400 hover:underline">
+                    {game.title}
+                  </Link>
 
                   {/* 5. Аналог *ngIf — логічне && */}
                   {game.isFavorite && (
