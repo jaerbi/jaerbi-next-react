@@ -2,9 +2,13 @@ import { INITIAL_GAMES } from '@/app/data/data';
 import Link from 'next/link';
 import Image from 'next/image';
 import LikeButton from '@/app/components/likeButton';
+import UserBadge from '@/app/components/userBadge';
 
 export default async function GameDetails({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
+  //   Check error
+  // throw new Error("БД заблоковано!");
+  await new Promise((resolve) => setTimeout(resolve, 2000));
   const game = INITIAL_GAMES.find((g) => g.id === Number(id));
 
   if (!game) {
@@ -26,6 +30,7 @@ export default async function GameDetails({ params }: { params: Promise<{ id: st
       {/* 1. Секція з великим банером */}
       <div className="absolute top-20 right-6 z-1">
         <LikeButton gameId={game.id} />
+        <UserBadge></UserBadge>
       </div>
       <div className="relative h-[400px] w-full">
         <Image

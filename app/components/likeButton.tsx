@@ -14,11 +14,12 @@ export default function LikeButton({ gameId }: { gameId: number }) {
   };
 
   return (
-    <button
-      onClick={handleLike}
-      className="bg-red-600 hover:bg-red-500 text-white px-6 py-3 rounded-full font-bold transition flex items-center gap-2 cursor-pointer"
-    >
-      <span>{loading ? '...' : '❤️ Like'}</span>
-    </button>
+     <button 
+        onClick={handleLike} 
+        disabled={loading}
+        className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg font-bold transition cursor-pointer"
+      >
+        {loading ? '...' : '❤️ Like'}
+      </button>
   );
 }

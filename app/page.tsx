@@ -5,12 +5,15 @@ import UserCard from './components/userCard';
 import Link from 'next/link';
 import { Game, INITIAL_GAMES } from './data/data';
 import { getGames } from './actions';
+import { useUser } from './context/userContext';
 
 export default function Home() {
   //    name — це сама змінна (аналог public name = 'Steve').
   // setName — це єдиний спосіб її змінити. Ти не можеш написати name = 'Alex'. React просто не помітить цього і не оновить екран. Треба обов'язково викликати setName('Alex').
-  const [name, setName] = useState('Steve');
-  const [likes, setLikes] = useState(0);
+  //   const [name, setName] = useState('Steve');
+  //   const [likes, setLikes] = useState(0);
+//   ЗАМІСТЬ ЛОКАЛЬНОГО useState БЕРЕМО ДАНІ З КОНТЕКСТУ
+  const { name, likes, setName, incrementLikes, resetUser } = useUser();
   const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [newGameTitle, setNewGameTitle] = useState('');
@@ -47,8 +50,9 @@ export default function Home() {
     setGames(games.filter((game: Game) => game.id !== id));
   };
   const handleReset = () => {
-    setName('Steve');
-    setLikes(0);
+    // setName('Steve');
+    // setLikes(0);
+    resetUser(); // Викликаємо ресет з контексту
     setGames([...INITIAL_GAMES]);
   };
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -84,13 +88,13 @@ export default function Home() {
 
       <div className="flex gap-[24px]">
         {/* Передаємо дані через атрибути (Props) */}
-        <UserCard name={name} level={likes} avatarColor="bg-green-500" onLike={() => setLikes(likes + 1)} />
+        <UserCard name={name} level={likes} avatarColor="bg-green-500" onLike={incrementLikes} />
         <UserCard
           name={'Alex'}
           level={5 + likes}
           isVip={true}
           avatarColor="bg-green-500"
-          onLike={() => setLikes(likes + 1)}
+          onLike={incrementLikes}
         />
       </div>
 
