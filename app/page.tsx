@@ -1,34 +1,76 @@
 'use client'; // 1. Це обов'язково в Next.js для інтерактивних компонентів
 
-import { useEffect, useState } from 'react'; // 2. Імпортуємо функцію для стану
+import { useEffect, useState, useRef } from 'react'; // 2. Імпортуємо функцію для стану
 import UserCard from './components/userCard';
 import Link from 'next/link';
 import { Game, INITIAL_GAMES } from './data/data';
 import { getGames } from './actions';
 import { useUser } from './context/userContext';
+import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 
 export default function Home() {
   //    name — це сама змінна (аналог public name = 'Steve').
   // setName — це єдиний спосіб її змінити. Ти не можеш написати name = 'Alex'. React просто не помітить цього і не оновить екран. Треба обов'язково викликати setName('Alex').
   //   const [name, setName] = useState('Steve');
   //   const [likes, setLikes] = useState(0);
-//   ЗАМІСТЬ ЛОКАЛЬНОГО useState БЕРЕМО ДАНІ З КОНТЕКСТУ
+  //   ЗАМІСТЬ ЛОКАЛЬНОГО useState БЕРЕМО ДАНІ З КОНТЕКСТУ
   const { name, likes, setName, incrementLikes, resetUser } = useUser();
   const [games, setGames] = useState<Game[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [newGameTitle, setNewGameTitle] = useState('');
+
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+  const { replace } = useRouter(); // replace змінює URL без додавання нової історії в браузер (back button)
+  const timerRef = import('react').then(() => {});
+  const searchTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const currentSearchValue = searchParams.get('search') || '';
 
   useEffect(() => {
     console.log(`Компонент з'явився (як ngOnInit)`);
     // Створюємо асинхронну функцію всередині useEffect
     const fetchGames = async () => {
       const freshGames = await getGames(); // Запитуємо свіжі дані з сервера
-      setGames([...freshGames]);
+
+      if (currentSearchValue) {
+        const filtered = freshGames.filter((game: any) =>
+          game.title.toLowerCase().includes(currentSearchValue.toLowerCase()),
+        );
+        setGames(filtered);
+      } else {
+        setGames(freshGames);
+      }
+
+      //   setGames([...freshGames]);
     };
 
     fetchGames();
     return () => {};
-  }, []);
+  }, [currentSearchValue]);
+
+  const handleSearch = (term: string) => {
+    if (searchTimer.current) {
+      clearTimeout(searchTimer.current);
+    }
+    const params = new URLSearchParams(searchParams);
+
+    searchTimer.current = setTimeout(() => {
+      const params = new URLSearchParams(searchParams);
+      
+      if (term) {
+        params.set('search', term);
+      } else {
+        params.delete('search');
+      }
+      
+      replace(`${pathname}?${params.toString()}`);
+      console.log(`URL оновлено значенням: ${term}`);
+    }, 400);
+
+    // Оновлюємо URL "на льоту"
+    replace(`${pathname}?${params.toString()}`);
+  };
+
   const addNewGame = () => {
     if (!newGameTitle.trim()) return; // Перевірка на порожній рядок
 
@@ -89,13 +131,7 @@ export default function Home() {
       <div className="flex gap-[24px]">
         {/* Передаємо дані через атрибути (Props) */}
         <UserCard name={name} level={likes} avatarColor="bg-green-500" onLike={incrementLikes} />
-        <UserCard
-          name={'Alex'}
-          level={5 + likes}
-          isVip={true}
-          avatarColor="bg-green-500"
-          onLike={incrementLikes}
-        />
+        <UserCard name={'Alex'} level={5 + likes} isVip={true} avatarColor="bg-green-500" onLike={incrementLikes} />
       </div>
 
       <div className="flex flex-col gap-4 p-6 bg-gray-800 rounded-xl border border-gray-700 w-full max-w-md">
@@ -119,6 +155,18 @@ export default function Home() {
             Додати
           </button>
         </div>
+      </div>
+
+      {/* Інпут для пошуку */}
+      <div className="flex flex-col gap-2 w-full max-w-md mt-6">
+        <label className="text-sm text-gray-400 text-left">Пошук ігор на сторінці:</label>
+        <input
+          type="text"
+          placeholder="Введіть назву для фільтрації..."
+          defaultValue={currentSearchValue} // Беремо початкове значення з URL
+          onChange={(e) => handleSearch(e.target.value)} // При зміні — оновлюємо URL
+          className="bg-gray-700 border border-gray-600 p-2 rounded-lg focus:outline-none focus:border-blue-500 text-white"
+        />
       </div>
 
       {!!games.length && (
